@@ -4,6 +4,9 @@
  * Author: SmartThings, brian@bevey.org
  *
  * Taken almost verbatim from https://gist.github.com/aurman/9813279
+ *
+ * Creates OAuth endpoints for devices and modes set up on your SmartThings
+ * account.
  */
 
 definition(
@@ -99,7 +102,7 @@ void updateLock() {
 
 // Modes
 void updateMode() {
-  log.debug "mode change request: params: ${params}"
+  log.debug "Mode change request: params: ${params}"
 
   def newMode = params.mode
   setLocationMode(newMode)
@@ -108,7 +111,7 @@ void updateMode() {
 def deviceHandler(evt) {}
 
 private void update(devices) {
-  log.debug "update, request: params: ${params}, devices: ${devices.id}"
+  log.debug "Update, request: params: ${params}, devices: ${devices.id}"
 
   def command = params.command
 
@@ -121,7 +124,9 @@ private void update(devices) {
 
     else {
       if(command == "toggle") {
-        if(device.latestValue('switch') == "on") {
+
+// For some devices, they will appear to be in a persistent state of either "on" or "off".
+        if(device.currentValue("switch") == "on") {
           device.off();
         }
 
@@ -139,6 +144,7 @@ private void update(devices) {
 
 private show(devices, type) {
   def device = devices.find { it.id == params.id }
+
   if (!device) {
     httpError(404, "Device not found")
   }
@@ -146,10 +152,11 @@ private show(devices, type) {
   else {
     def attributeName = type == "motionSensor" ? "motion" : type
     def s = device.currentState(attributeName)
+
     [id: device.id, label: device.displayName, value: s?.value, unitTime: s?.date?.time, type: type]
   }
 }
 
 private device(it, type) {
-  it ? [id: it.id, label: it.label, type: type] : null
+  it ? [id: it.id, label: it.label, type: type, state: it.currentValue(type)] : null
 }
