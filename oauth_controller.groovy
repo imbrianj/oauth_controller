@@ -23,6 +23,7 @@ preferences {
   section("Allow Endpoint to Control These Things...") {
     input "switches", "capability.switch", title: "Which Switches?", multiple: true, required: false
     input "locks",    "capability.lock",   title: "Which Locks?",    multiple: true, required: false
+    input "hodor",    "capability.sensor", title: "Hodor?",          multiple: true, required: false
   }
 }
 
@@ -68,6 +69,12 @@ mappings {
       GET: "updateMode"
     ]
   }
+
+  path("/hodor") {
+    action: [
+      GET: "hodor"
+    ]
+  }
 }
 
 def installed() {}
@@ -83,8 +90,8 @@ def showSwitch() {
   show(switches, "switch")
 }
 
-void updateSwitch() {
-  update(switches)
+def updateSwitch() {
+  update(switches, "switch")
 }
 
 // Locks
@@ -96,12 +103,17 @@ def showLock() {
   show(locks, "lock")
 }
 
-void updateLock() {
-  update(locks)
+def updateLock() {
+  update(locks, "lock")
+}
+
+// Hodor
+def hodor() {
+  hodor.hodor()
 }
 
 // Modes
-void updateMode() {
+private updateMode() {
   log.debug "Mode change request: params: ${params}"
 
   def newMode = params.mode
@@ -110,36 +122,37 @@ void updateMode() {
 
 def deviceHandler(evt) {}
 
-private void update(devices) {
-  log.debug "Update, request: params: ${params}, devices: ${devices.id}"
-
-  def command = params.command
+private update(devices, type) {
+  def command  = params.command
+  def device   = devices.find { it.id == params.id }
+  def newValue = ''
 
   if (command) {
-    def device = devices.find { it.id == params.id }
-
     if (!device) {
       httpError(404, "Device not found")
     }
 
     else {
       if(command == "toggle") {
-
-// For some devices, they will appear to be in a persistent state of either "on" or "off".
-        if(device.currentValue("switch") == "on") {
+        if(device.currentValue(type) == "on") {
           device.off();
+          newValue = "off"
         }
 
         else {
           device.on();
+          newValue = "on"
         }
       }
 
       else {
         device."$command"()
+        newValue = command
       }
     }
   }
+
+  [id: device.id, label: device.displayName, value: newValue, type: type]
 }
 
 private show(devices, type) {
