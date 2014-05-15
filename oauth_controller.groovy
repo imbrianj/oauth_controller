@@ -83,7 +83,7 @@ def updated() {}
 
 // Switches
 def listSwitches() {
-  switches.collect{device(it,"switch")}
+  switches.collect{showDevice(it,"switch")}
 }
 
 def showSwitch() {
@@ -96,7 +96,7 @@ def updateSwitch() {
 
 // Locks
 def listLocks() {
-  locks.collect{device(it,"lock")}
+  locks.collect{showDevice(it,"lock")}
 }
 
 def showLock() {
@@ -152,7 +152,7 @@ private update(devices, type) {
     }
   }
 
-  [id: device.id, label: device.displayName, value: newValue, type: type]
+  switches.collect{showDevice(it, type)}
 }
 
 private show(devices, type) {
@@ -170,6 +170,6 @@ private show(devices, type) {
   }
 }
 
-private device(it, type) {
+private showDevice(it, type) {
   it ? [id: it.id, label: it.label, type: type, state: it.currentValue(type)] : null
 }
