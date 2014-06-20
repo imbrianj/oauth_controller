@@ -105,7 +105,7 @@ def updated() {}
 
 // Switches
 def listSwitches() {
-  switches.collect{showDevice(it,"switch")}
+  switches.collect{showDevice(it,"switch",null,null)}
 }
 
 def showSwitch() {
@@ -118,7 +118,7 @@ def updateSwitch() {
 
 // Locks
 def listLocks() {
-  locks.collect{showDevice(it,"lock")}
+  locks.collect{showDevice(it,"lock",null,null)}
 }
 
 def showLock() {
@@ -174,7 +174,7 @@ private update(devices, type) {
     }
   }
 
-  switches.collect{showDevice(it, type)}
+  switches.collect{showDevice(it, type, device, newValue)}
 }
 
 private show(devices, type) {
@@ -188,10 +188,20 @@ private show(devices, type) {
     def attributeName = type == "motionSensor" ? "motion" : type
     def s = device.currentState(attributeName)
 
-    [id: device.id, label: device.displayName, value: s?.value, unitTime: s?.date?.time, type: type]
+    [id: device.id, label: device.displayName, type: type, state: s?.value, unitTime: s?.date?.time]
   }
 }
 
-private showDevice(it, type) {
-  it ? [id: it.id, label: it.label, type: type, state: it.currentValue(type)] : null
+private showDevice(it, type, lastDevice, lastValue) {
+  def deviceValue = ''
+
+  if(it == lastDevice) {
+    deviceValue = lastValue
+  }
+
+  else {
+    deviceValue = it.currentValue(type)
+  }
+
+  it ? [id: it.id, label: it.label, type: type, state: deviceValue] : null
 }
