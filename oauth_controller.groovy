@@ -10,7 +10,7 @@
  *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -105,7 +105,9 @@ def updated() {}
 
 // Switches
 def listSwitches() {
-  switches.collect{showDevice(it,"switch",null,null)}
+  def devices = switches.collect{showDevice(it,"switch",null,null)}
+
+  [mode: location.mode, devices: devices]
 }
 
 def showSwitch() {
@@ -118,7 +120,9 @@ def updateSwitch() {
 
 // Locks
 def listLocks() {
-  locks.collect{showDevice(it,"lock",null,null)}
+  def devices = locks.collect{showDevice(it,"lock",null,null)}
+
+  [mode: location.mode, devices: devices]
 }
 
 def showLock() {
@@ -138,8 +142,9 @@ def hodor() {
 private updateMode() {
   log.debug "Mode change request: params: ${params}"
 
-  def newMode = params.mode
-  setLocationMode(newMode)
+  setLocationMode(params.mode)
+
+  show(switches, "switch")
 }
 
 def deviceHandler(evt) {}
@@ -179,6 +184,7 @@ private update(devices, type) {
 
 private show(devices, type) {
   def device = devices.find { it.id == params.id }
+  def mode   = params.mode ? params.mode : location.mode
 
   if (!device) {
     httpError(404, "Device not found")
@@ -188,7 +194,7 @@ private show(devices, type) {
     def attributeName = type == "motionSensor" ? "motion" : type
     def s = device.currentState(attributeName)
 
-    [id: device.id, label: device.displayName, type: type, state: s?.value, unitTime: s?.date?.time]
+    [mode: mode, devices: [id: device.id, label: device.displayName, type: type, state: s?.value, unitTime: s?.date?.time]]
   }
 }
 
