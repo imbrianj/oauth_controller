@@ -179,7 +179,9 @@ private update(devices, type) {
     }
   }
 
-  switches.collect{showDevice(it, type, device, newValue)}
+  devices = switches.collect{showDevice(it, type, device, newValue)}
+
+  [mode: location.mode, devices: devices]
 }
 
 private show(devices, type) {
