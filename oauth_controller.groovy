@@ -21,14 +21,10 @@
  */
 
 /**
- * App Endpoint API Access Example
- *
- * Author: SmartThings, brian@bevey.org
- *
- * Taken almost verbatim from https://gist.github.com/aurman/9813279
- *
  * Creates OAuth endpoints for devices and modes set up on your SmartThings
  * account.
+ *
+ * Author: brian@bevey.org
  */
 
 definition(
@@ -43,113 +39,82 @@ definition(
 
 preferences {
   section("Allow Endpoint to Control These Things...") {
-    input "switches", "capability.switch", title: "Which Switches?", multiple: true, required: false
-    input "locks",    "capability.lock",   title: "Which Locks?",    multiple: true, required: false
-    input "hodor",    "capability.sensor", title: "Hodor?",          multiple: true, required: false
+    input "switches", "capability.switch",        title: "Which Switches?", multiple: true, required: false
+    input "locks",    "capability.lock",          title: "Which Locks?",    multiple: true, required: false
+    input "contact",  "capability.contactSensor", title: "Which Contact?",  multiple: true, required: false
+    input "moisture", "capability.waterSensor",   title: "Which Moisture?", multiple: true, required: false
+    input "motion",   "capability.motionSensor",  title: "Which Motion?",   multiple: true, required: false
   }
 }
 
 mappings {
-  path("/switches") {
-    action: [
-      GET: "listSwitches"
-    ]
-  }
-
-  path("/switches/:id") {
-    action: [
-      GET: "showSwitch"
-    ]
-  }
-
   path("/switches/:id/:command") {
-    action: [
-      GET: "updateSwitch"
-    ]
-  }
-
-  path("/locks") {
-    action: [
-      GET: "listLocks"
-    ]
-  }
-
-  path("/locks/:id") {
-    action: [
-      GET: "showLock"
-    ]
+    action: [GET: "updateSwitch"]
   }
 
   path("/locks/:id/:command") {
-    action: [
-      GET: "updateLock"
-    ]
+    action: [GET: "updateLock"]
   }
 
   path("/mode/:mode") {
-    action: [
-      GET: "updateMode"
-    ]
+    action: [GET: "updateMode"]
   }
 
-  path("/hodor") {
-    action: [
-      GET: "hodor"
-    ]
+  path("/list") {
+    action: [GET: "listDevices"]
   }
 }
 
-def installed() {}
-
-def updated() {}
-
-// Switches
-def listSwitches() {
-  def devices = switches.collect{showDevice(it,"switch",null,null)}
-
-  [mode: location.mode, devices: devices]
+def listDevices() {
+  printDevices(null, null)
 }
 
-def showSwitch() {
-  show(switches, "switch")
+def printDevices(device, newValue) {
+  def mode = params.mode ? params.mode : location.mode
+
+  return [mode: mode, devices: (settings.switches + settings.locks + settings.contact + settings.moisture + settings.motion).collect{deviceJson(it, device, newValue)}]
+}
+
+def deviceJson(it, device, newValue) {
+  if (!it) { return [] }
+
+  def values = [:]
+
+  for (a in it.supportedAttributes) {
+    if(it == device && (a.name == 'switch' || a.name == 'lock')) {
+      values[a.name] = [name  : a.name,
+                        value : newValue]
+    }
+
+    else {
+      values[a.name] = it.currentState(a.name)
+    }
+  }
+
+  return [label  : it.displayName,
+          name   : it.name,
+          id     : it.id,
+          values : values]
 }
 
 def updateSwitch() {
   update(switches, "switch")
 }
 
-// Locks
-def listLocks() {
-  def devices = locks.collect{showDevice(it,"lock",null,null)}
-
-  [mode: location.mode, devices: devices]
-}
-
-def showLock() {
-  show(locks, "lock")
-}
-
 def updateLock() {
   update(locks, "lock")
 }
 
-// Hodor
-def hodor() {
-  hodor.hodor()
-}
-
 // Modes
-private updateMode() {
+def updateMode() {
   log.debug "Mode change request: params: ${params}"
 
   setLocationMode(params.mode)
 
-  show(switches, "switch")
+  listDevices()
 }
 
-def deviceHandler(evt) {}
-
-private update(devices, type) {
+def update(devices, type) {
   def command  = params.command
   def device   = devices.find { it.id == params.id }
   def newValue = ''
@@ -161,55 +126,37 @@ private update(devices, type) {
 
     else {
       if(command == "toggle") {
-        if(device.currentValue(type) == "on") {
-          device.off();
-          newValue = "off"
+        if(type == 'switch') {
+          if(device.currentValue(type) == "on") {
+            device.off();
+            newValue = "off"
+          }
+
+          else {
+            device.on();
+            newValue = "on"
+          }
         }
 
-        else {
-          device.on();
-          newValue = "on"
+        if(type == 'lock') {
+          if(device.currentValue(type) == "locked") {
+            device.off();
+            newValue = "unlock"
+          }
+
+          else {
+            device.on();
+            newValue = "lock"
+          }
         }
       }
 
-      else {
+      if(!newValue) {
         device."$command"()
         newValue = command
       }
     }
   }
 
-  devices = switches.collect{showDevice(it, type, device, newValue)}
-
-  [mode: location.mode, devices: devices]
-}
-
-private show(devices, type) {
-  def device = devices.find { it.id == params.id }
-  def mode   = params.mode ? params.mode : location.mode
-
-  if (!device) {
-    httpError(404, "Device not found")
-  }
-
-  else {
-    def attributeName = type == "motionSensor" ? "motion" : type
-    def s = device.currentState(attributeName)
-
-    [mode: mode, devices: [id: device.id, label: device.displayName, type: type, state: s?.value, unitTime: s?.date?.time]]
-  }
-}
-
-private showDevice(it, type, lastDevice, lastValue) {
-  def deviceValue = ''
-
-  if(it == lastDevice) {
-    deviceValue = lastValue
-  }
-
-  else {
-    deviceValue = it.currentValue(type)
-  }
-
-  it ? [id: it.id, label: it.label, type: type, state: deviceValue] : null
+  printDevices(device, newValue)
 }
