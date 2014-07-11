@@ -28,13 +28,13 @@
  */
 
 definition(
-    name: "OAuth Endpoint",
-    namespace: "ImBrian",
-    author: "Brian J.",
-    description: "OAuth endpoint for Universal Controller",
-    iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
-    iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience%402x.png",
-    oauth: true
+  name: "OAuth Endpoint",
+  namespace: "imbrianj",
+  author: "brian@bevey.org",
+  description: "OAuth endpoint for Universal Controller",
+  iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
+  iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience%402x.png",
+  oauth: true
 )
 
 preferences {
