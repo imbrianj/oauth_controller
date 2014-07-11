@@ -45,8 +45,59 @@ preferences {
     input "moisture", "capability.waterSensor",   title: "Which Moisture?", multiple: true, required: false
     input "motion",   "capability.motionSensor",  title: "Which Motion?",   multiple: true, required: false
   }
+
+  section("IP:PORT of local endpoint") {
+    input "endpoint", "decimal", title: "IP:PORT of local endpoint", required: false
+  }
 }
 
+  /*********************/
+ /* EVENT REGISTERING */
+/*********************/
+def installed() {
+  init()
+}
+
+def updated() {
+  unsubscribe()
+  init()
+}
+
+def init() {
+  if(endpoint) {
+    subscribe(location, "event.mode",  eventFired)
+    subscribe(switches, "switch",      eventFired)
+    subscribe(locks,    "lock",        eventFired)
+    subscribe(temp,     "temperature", eventFired)
+    subscribe(contact,  "contact",     eventFired)
+    subscribe(moisture, "moisture",    eventFired)
+    subscribe(motion,   "motion",      eventFired)
+  }
+}
+
+def eventFired(evt) {
+  def device = evt.displayName
+  def value = evt.value.capitalize()
+
+  log.warn(device + " is now " + value)
+
+  def hubAction = sendHubCommand(new physicalgraph.device.HubAction(
+    method: "GET",
+    path: "/",
+    headers: [HOST:endpoint],
+    query: ["smartthings":"subdevice-state" + value + "-" + device]
+  ))
+
+  if(options) {
+    hubAction.options = options
+  }
+
+  hubAction
+}
+
+  /****************/
+ /* API ENDPOINT */
+/****************/
 mappings {
   path("/switches/:id/:command") {
     action: [GET: "updateSwitch"]
