@@ -65,7 +65,7 @@ def updated() {
 
 def init() {
   if(endpoint) {
-    subscribe(location, "event.mode",  eventFired)
+    subscribe(location, "mode",        modeEventFired)
     subscribe(switches, "switch",      eventFired)
     subscribe(locks,    "lock",        eventFired)
     subscribe(temp,     "temperature", eventFired)
@@ -75,17 +75,22 @@ def init() {
   }
 }
 
-def eventFired(evt) {
-  def device = evt.displayName
-  def value = evt.value.capitalize()
+def modeEventFired(evt) {
+  sendUpdate(evt.value.capitalize(), 'Mode')
+}
 
-  log.warn(device + " is now " + value)
+def eventFired(evt) {
+  sendUpdate(evt.displayName, evt.value.capitalize())
+}
+
+def sendUpdate(name, value) {
+  log.warn(name + " is now " + value)
 
   def hubAction = sendHubCommand(new physicalgraph.device.HubAction(
     method: "GET",
     path: "/",
     headers: [HOST:endpoint, REST:true],
-    query: ["smartthings":"subdevice-state" + value + "-" + device]
+    query: ["smartthings":"subdevice-state" + value + "-" + name]
   ))
 
   if(options) {
