@@ -84,7 +84,7 @@ def eventFired(evt) {
   def hubAction = sendHubCommand(new physicalgraph.device.HubAction(
     method: "GET",
     path: "/",
-    headers: [HOST:endpoint],
+    headers: [HOST:endpoint, REST:true],
     query: ["smartthings":"subdevice-state" + value + "-" + device]
   ))
 
