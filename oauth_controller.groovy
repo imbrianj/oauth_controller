@@ -39,11 +39,12 @@ definition(
 
 preferences {
   section("Allow Endpoint to Control These Things...") {
-    input "switches", "capability.switch",        title: "Which Switches?", multiple: true, required: false
-    input "locks",    "capability.lock",          title: "Which Locks?",    multiple: true, required: false
-    input "contact",  "capability.contactSensor", title: "Which Contact?",  multiple: true, required: false
-    input "moisture", "capability.waterSensor",   title: "Which Moisture?", multiple: true, required: false
-    input "motion",   "capability.motionSensor",  title: "Which Motion?",   multiple: true, required: false
+    input "switches", "capability.switch",         title: "Which Switches?", multiple: true, required: false
+    input "locks",    "capability.lock",           title: "Which Locks?",    multiple: true, required: false
+    input "contact",  "capability.contactSensor",  title: "Which Contact?",  multiple: true, required: false
+    input "moisture", "capability.waterSensor",    title: "Which Moisture?", multiple: true, required: false
+    input "motion",   "capability.motionSensor",   title: "Which Motion?",   multiple: true, required: false
+    input "presence", "capability.presenceSensor", title: "Which Presence?", multiple: true, required: false
   }
 
   section("IP:PORT of local endpoint") {
@@ -72,6 +73,7 @@ def init() {
     subscribe(contact,  "contact",     eventFired)
     subscribe(moisture, "moisture",    eventFired)
     subscribe(motion,   "motion",      eventFired)
+    subscribe(presence, "presence",    eventFired)
   }
 }
 
@@ -128,7 +130,7 @@ def listDevices() {
 def printDevices(device, newValue) {
   def mode = params.mode ? params.mode : location.mode
 
-  return [mode: mode, devices: (settings.switches + settings.locks + settings.contact + settings.moisture + settings.motion).collect{deviceJson(it, device, newValue)}]
+  return [mode: mode, devices: (settings.switches + settings.locks + settings.contact + settings.moisture + settings.motion + settings.presence).collect{deviceJson(it, device, newValue)}]
 }
 
 def deviceJson(it, device, newValue) {
