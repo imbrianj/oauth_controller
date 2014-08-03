@@ -88,6 +88,11 @@ def eventFired(evt) {
 def sendUpdate(name, value) {
   log.warn(name + " is now " + value)
 
+  // Numeric values (such as temp) should be delineated with a dash.
+  if(value.isNumber()) {
+    value = "-" + value;
+  }
+
   def hubAction = sendHubCommand(new physicalgraph.device.HubAction(
     method: "GET",
     path: "/",
