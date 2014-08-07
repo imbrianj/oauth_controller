@@ -78,7 +78,7 @@ def init() {
 }
 
 def modeEventFired(evt) {
-  sendUpdate(evt.value, "mode")
+  sendUpdate("Mode", evt.value, "mode")
 }
 
 def switchFired(evt) {
@@ -132,15 +132,23 @@ def sendUpdate(name, value, type) {
     summary = "off"
   }
 
-  else if(value.isNumber()) {
+  else {
     summary = value
+  }
+
+  if(name == "Mode") {
+    name = ""
+  }
+
+  else {
+    name = name + "-"
   }
 
   def hubAction = sendHubCommand(new physicalgraph.device.HubAction(
     method: "GET",
     path: "/",
     headers: [HOST:endpoint, REST:true],
-    query: ["smartthings":"subdevice-state-" + type + "-" + name + "-" + summary]
+    query: ["smartthings":"subdevice-state-" + type + "-" + name + summary]
   ))
 
   if(options) {
