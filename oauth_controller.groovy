@@ -67,37 +67,80 @@ def updated() {
 def init() {
   if(endpoint) {
     subscribe(location, "mode",        modeEventFired)
-    subscribe(switches, "switch",      eventFired)
-    subscribe(locks,    "lock",        eventFired)
-    subscribe(temp,     "temperature", eventFired)
-    subscribe(contact,  "contact",     eventFired)
-    subscribe(moisture, "moisture",    eventFired)
-    subscribe(motion,   "motion",      eventFired)
-    subscribe(presence, "presence",    eventFired)
+    subscribe(switches, "switch",      switchFired)
+    subscribe(locks,    "lock",        lockFired)
+    subscribe(temp,     "temperature", tempFired)
+    subscribe(contact,  "contact",     contactFired)
+    subscribe(moisture, "moisture",    moistureFired)
+    subscribe(motion,   "motion",      motionFired)
+    subscribe(presence, "presence",    presenceFired)
   }
 }
 
 def modeEventFired(evt) {
-  sendUpdate(evt.value.capitalize(), 'Mode')
+  sendUpdate(evt.value, "mode")
 }
 
-def eventFired(evt) {
-  sendUpdate(evt.displayName, evt.value.capitalize())
+def switchFired(evt) {
+  sendUpdate(evt.displayName, evt.value, "switch")
 }
 
-def sendUpdate(name, value) {
+def lockFired(evt) {
+  sendUpdate(evt.displayName, evt.value, "lock")
+}
+
+def tempFired(evt) {
+  sendUpdate(evt.displayName, evt.value, "temp")
+}
+
+def contactFired(evt) {
+  sendUpdate(evt.displayName, evt.value, "contact")
+}
+
+def moistureFired(evt) {
+  sendUpdate(evt.displayName, evt.value, "moisture")
+}
+
+def motionFired(evt) {
+  sendUpdate(evt.displayName, evt.value, "motion")
+}
+
+def presenceFired(evt) {
+  sendUpdate(evt.displayName, evt.value, "presence")
+}
+
+def sendUpdate(name, value, type) {
+  def summary = ""
+
   log.warn(name + " is now " + value)
 
-  // Numeric values (such as temp) should be delineated with a dash.
-  if(value.isNumber()) {
-    value = "-" + value;
+  if(value == "on"     ||
+     value == "lock"   ||
+     value == "open"   ||
+     value == "wet"    ||
+     value == "active" ||
+     value == "present") {
+    summary = "on"
+  }
+
+  else if(value == "off"      ||
+          value == "unlock"   ||
+          value == "closed"   ||
+          value == "dry"      ||
+          value == "inactive" ||
+          value == "not present") {
+    summary = "off"
+  }
+
+  else if(value.isNumber()) {
+    summary = value
   }
 
   def hubAction = sendHubCommand(new physicalgraph.device.HubAction(
     method: "GET",
     path: "/",
     headers: [HOST:endpoint, REST:true],
-    query: ["smartthings":"subdevice-state" + value + "-" + name]
+    query: ["smartthings":"subdevice-state-" + type + "-" + name + "-" + summary]
   ))
 
   if(options) {
@@ -144,7 +187,7 @@ def deviceJson(it, device, newValue) {
   def values = [:]
 
   for (a in it.supportedAttributes) {
-    if(it == device && (a.name == 'switch' || a.name == 'lock')) {
+    if(it == device && (a.name == "switch" || a.name == "lock")) {
       values[a.name] = [name  : a.name,
                         value : newValue]
     }
@@ -180,7 +223,7 @@ def updateMode() {
 def update(devices, type) {
   def command  = params.command
   def device   = devices.find { it.id == params.id }
-  def newValue = ''
+  def newValue = ""
 
   if (command) {
     if (!device) {
@@ -189,7 +232,7 @@ def update(devices, type) {
 
     else {
       if(command == "toggle") {
-        if(type == 'switch') {
+        if(type == "switch") {
           if(device.currentValue(type) == "on") {
             device.off();
             newValue = "off"
@@ -201,7 +244,7 @@ def update(devices, type) {
           }
         }
 
-        if(type == 'lock') {
+        if(type == "lock") {
           if(device.currentValue(type) == "locked") {
             device.off();
             newValue = "unlock"
