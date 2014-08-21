@@ -71,7 +71,7 @@ def init() {
     subscribe(locks,    "lock",        lockFired)
     subscribe(temp,     "temperature", tempFired)
     subscribe(contact,  "contact",     contactFired)
-    subscribe(moisture, "moisture",    moistureFired)
+    subscribe(moisture, "water",       moistureFired)
     subscribe(motion,   "motion",      motionFired)
     subscribe(presence, "presence",    presenceFired)
   }
