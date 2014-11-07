@@ -39,12 +39,14 @@ definition(
 
 preferences {
   section("Allow Endpoint to Control These Things...") {
-    input "switches", "capability.switch",         title: "Which Switches?", multiple: true, required: false
-    input "locks",    "capability.lock",           title: "Which Locks?",    multiple: true, required: false
-    input "contact",  "capability.contactSensor",  title: "Which Contact?",  multiple: true, required: false
-    input "moisture", "capability.waterSensor",    title: "Which Moisture?", multiple: true, required: false
-    input "motion",   "capability.motionSensor",   title: "Which Motion?",   multiple: true, required: false
-    input "presence", "capability.presenceSensor", title: "Which Presence?", multiple: true, required: false
+    input "switches", "capability.switch",                 title: "Which Switches?", multiple: true, required: false
+    input "locks",    "capability.lock",                   title: "Which Locks?",    multiple: true, required: false
+    input "temp",     "capability.temperatureMeasurement", title: "Which Temp?",     multiple: true, required: false
+    input "vibrate",  "capability.accelerationSensor",     title: "Which Vibrate?",  multiple: true, required: false
+    input "contact",  "capability.contactSensor",          title: "Which Contact?",  multiple: true, required: false
+    input "moisture", "capability.waterSensor",            title: "Which Moisture?", multiple: true, required: false
+    input "motion",   "capability.motionSensor",           title: "Which Motion?",   multiple: true, required: false
+    input "presence", "capability.presenceSensor",         title: "Which Presence?", multiple: true, required: false
   }
 
   section("IP:PORT of local endpoint") {
@@ -66,14 +68,15 @@ def updated() {
 
 def init() {
   if(endpoint) {
-    subscribe(location, "mode",        modeEventFired)
-    subscribe(switches, "switch",      switchFired)
-    subscribe(locks,    "lock",        lockFired)
-    subscribe(temp,     "temperature", tempFired)
-    subscribe(contact,  "contact",     contactFired)
-    subscribe(moisture, "water",       moistureFired)
-    subscribe(motion,   "motion",      motionFired)
-    subscribe(presence, "presence",    presenceFired)
+    subscribe(location, "mode",         modeEventFired)
+    subscribe(switches, "switch",       switchFired)
+    subscribe(locks,    "lock",         lockFired)
+    subscribe(temp,     "temperature",  tempFired)
+    subscribe(vibrate,  "acceleration", vibrateFired)
+    subscribe(contact,  "contact",      contactFired)
+    subscribe(moisture, "water",        moistureFired)
+    subscribe(motion,   "motion",       motionFired)
+    subscribe(presence, "presence",     presenceFired)
   }
 }
 
@@ -91,6 +94,10 @@ def lockFired(evt) {
 
 def tempFired(evt) {
   sendUpdate(evt.displayName, evt.value, "temp")
+}
+
+def vibrateFired(evt) {
+  sendUpdate(evt.displayName, evt.value, "vibrate")
 }
 
 def contactFired(evt) {
@@ -112,7 +119,7 @@ def presenceFired(evt) {
 def sendUpdate(name, value, type) {
   def summary = ""
 
-  log.warn(name + " is now " + value)
+  log.warn(name + " " + type + " is now " + value)
 
   if(value == "on"     ||
      value == "lock"   ||
