@@ -31,7 +31,7 @@ definition(
   name: "OAuth Endpoint",
   namespace: "imbrianj",
   author: "brian@bevey.org",
-  description: "OAuth endpoint for Universal Controller",
+  description: "OAuth endpoint for SwitchBoard",
   iconUrl: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience.png",
   iconX2Url: "https://s3.amazonaws.com/smartapp-icons/Convenience/Cat-Convenience%402x.png",
   oauth: true
@@ -50,7 +50,7 @@ preferences {
   }
 
   section("IP:PORT of local endpoint") {
-    input "endpoint", "decimal", title: "IP:PORT of local endpoint", required: false
+    input "endpoint", title: "IP:PORT of local endpoint", required: false
   }
 }
 
