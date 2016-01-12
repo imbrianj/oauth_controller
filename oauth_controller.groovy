@@ -261,24 +261,28 @@ def update(devices, type) {
       if(command == "toggle") {
         if(type == "switch") {
           if(device.currentValue(type) == "on") {
-            device.off();
+            log.info "Turning off ${device}"
+            device.off()
             newValue = "off"
           }
 
           else {
-            device.on();
+            log.info "Turning on ${device}"
+            device.on()
             newValue = "on"
           }
         }
 
         if(type == "lock") {
           if(device.currentValue(type) == "locked") {
-            device.off();
+            log.info "Unlocking ${device}"
+            device.off()
             newValue = "unlock"
           }
 
           else {
-            device.on();
+            log.info "Locking ${device}"
+            device.on()
             newValue = "lock"
           }
         }
